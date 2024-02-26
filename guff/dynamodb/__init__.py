@@ -1,5 +1,27 @@
+import uuid
+from datetime import datetime, UTC
 from typing import Mapping, List, Tuple, Any, Dict, Optional
 from dataclasses import dataclass
+
+from boto3.dynamodb.types import TypeSerializer
+
+def new_id():
+    """
+    Generate a new unique identifier using UUID4.
+
+    Returns:
+        str: A string representation of a new UUID.
+    """
+    return str(uuid.uuid4())
+
+def timestamp():
+    """
+    Get the current UTC time as a timestamp in milliseconds.
+
+    Returns:
+        int: Current UTC time in milliseconds since the epoch.
+    """
+    return round(int(datetime.now(UTC).timestamp() * 1000))
 
 def remove_none_values(obj):
     """
@@ -128,3 +150,36 @@ def build_update_operation(base_dict: Dict[str, any], update_dict: Dict[str, any
         update_names, 
         remove_none_values(update_values)
     )
+
+ 
+def serialize(input_dict: dict) -> dict:
+    """
+    Serialize a Python dictionary using Boto3's TypeSerializer.
+
+    Parameters:
+    - input_dict (dict): The input Python dictionary to be serialized.
+
+    Returns:
+    - dict: The serialized dictionary with DynamoDB AttributeValues.
+
+    Raises:
+    - TypeError: If the input is not a dictionary or if serialization fails.
+
+    Example:
+    >>> input_dict = {'example_key': 'example_value'}
+    >>> serialize(input_dict)
+    {'example_key': {'S': 'example_value'}}
+    """
+    try:
+        # Create an instance of Boto3's TypeSerializer
+        serializer = TypeSerializer()
+
+        # Use TypeSerializer to serialize each key-value pair in the input dictionary
+        serialized_dict = {k: serializer.serialize(v) for k, v in input_dict.items()}
+
+        print(serialized_dict)
+        return serialized_dict
+
+    except Exception as e:
+        # Handle serialization errors
+        raise TypeError(f"Failed to serialize dictionary: {str(e)}")
